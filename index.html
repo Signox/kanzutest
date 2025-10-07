@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SACCO Admin Dashboard</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .login-card, .dashboard-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-card {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #c33;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .welcome {
+            color: #333;
+        }
+
+        .welcome span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .logout-btn, .new-loan-btn, .set-approvals-btn {
+            padding: 10px 20px;
+            background: #fff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover, .new-loan-btn:hover, .set-approvals-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .filter-btn.active:hover {
+            background: #5568d3;
+        }
+
+        .loans-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .loans-table thead {
+            background: #f8f9fa;
+        }
+
+        .loans-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .loans-table td {
+            padding: 16px;
+            border-top: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        .loans-table tr:hover {
+            background: #fafafa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pending {
+            background: #fff4e6;
+            color: #e67e22;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .status-disbursed {
+            background: #e3f2fd;
+            color: #2196f3;
+        }
+
+        .status-rejected {
+            background: #ffebee;
+            color: #e74c3c;
+        }
+
+        .approve-btn {
+            padding: 8px 16px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .approve-btn:hover {
+            background: #229954;
+            transform: scale(1.05);
+        }
+
+        .approve-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .date {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .payment-datalist {
+            width: 150px;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .payment-datalist:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .cancel-btn {
+            padding: 10px 20px;
+            background: #fff;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            background: #fff;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .pagination button:disabled {
+            background: #ccc;
+            color: #666;
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-card {
+                padding: 20px;
+            }
+
+            .loans-table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                margin: 20px;
+                padding: 20px;
+            }
+
+            .pagination {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .logout-btn, .new-loan-btn, .set-approvals-btn {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const API_BASE_URL = 'http://localhost:8080/api';
+
+        function App() {
+            const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [loans, setLoans] = useState([]);
+            const [filter, setFilter] = useState('all');
+            const [currentUser, setCurrentUser] = useState('');
+            const [dataLoading, setDataLoading] = useState(false);
+            const [paymentTypes, setPaymentTypes] = useState({});
+            const [showLoanForm, setShowLoanForm] = useState(false);
+            const [newLoanMember, setNewLoanMember] = useState('');
+            const [newLoanAmount, setNewLoanAmount] = useState('');
+            const [newLoanPaymentType, setNewLoanPaymentType] = useState('');
+            const [currentPage, setCurrentPage] = useState(1);
+            const [showGlobalApprovalsForm, setShowGlobalApprovalsForm] = useState(false);
+            const [globalRequiredApprovals, setGlobalRequiredApprovals] = useState(2);
+            const [newGlobalRequiredApprovals, setNewGlobalRequiredApprovals] = useState('');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const loansPerPage = 5;
+
+            const paymentOptions = [
+                'BANK_TRANSFER',
+                'MOBILE_MONEY',
+                'CASH',
+                'CHEQUE'
+            ];
+
+            const getFilteredLoans = () => {
+                let userFilteredLoans = loans;
+                if (currentUser.toLowerCase() !== 'admin') {
+                    userFilteredLoans = loans.filter(loan =>
+                        loan.member.toLowerCase() === currentUser.toLowerCase()
+                    );
+                }
+                if (filter === 'all') {
+                    return userFilteredLoans;
+                }
+                return userFilteredLoans.filter(loan =>
+                    loan.status.toLowerCase().includes(filter.toLowerCase())
+                );
+            };
+            const filteredLoans = getFilteredLoans();
+
+            useEffect(() => {
+                const totalPages = Math.ceil(filteredLoans.length / loansPerPage);
+                if (currentPage > totalPages && totalPages > 0) {
+                    setCurrentPage(1);
+                }
+            }, [filteredLoans.length, currentPage, loansPerPage]);
+
+            const getUniqueMembers = () => {
+                const mockLoans = [
+                    { id: 1, member: 'John Doe', amount: 5000000, status: 'pending approval', createdAt: '2025-10-05T10:30:00', approvals: 1, requiredApprovals: globalRequiredApprovals, payment: 'BANK_TRANSFER' },
+                    { id: 2, member: 'Jane Smith', amount: 3000000, status: 'Approved', createdAt: '2025-10-04T14:20:00', approvals: 2, requiredApprovals: globalRequiredApprovals, payment: 'MOBILE_MONEY' },
+                    { id: 3, member: 'Bob Johnson', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' },
+                    { id: 4, member: 'Luna Mark', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' },
+                    { id: 5, member: 'Babo log', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' },
+                    { id: 6, member: 'Ken Koida', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' },
+                    { id: 7, member: 'Marley Jose', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' }
+                ];
+                
+                return [...new Set(mockLoans.map(loan => loan.member))];
+            };
+
+            const uniqueMembers = getUniqueMembers();
+
+            const handlePaymentChange = (loanId, newPaymentType) => {
+                setPaymentTypes(prev => ({
+                    ...prev,
+                    [loanId]: newPaymentType
+                }));
+                
+                setLoans(prevLoans =>
+                    prevLoans.map(loan =>
+                        loan.id === loanId
+                            ? { ...loan, payment: newPaymentType }
+                            : loan
+                    )
+                );
+            };
+
+            const loanRequest = async (e) => {
+                e.preventDefault();
+
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+           
+                
+                if (!newLoanMember || !newLoanAmount || !newLoanPaymentType) {
+                    setError('Please fill all fields');
+                    console.log('❌ Validation failed: missing fields');
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                const trimmedMember = newLoanMember.trim();
+                if (!uniqueMembers.includes(trimmedMember)) {
+                    setError(`Please select a valid member. Available: ${uniqueMembers.join(', ')}`);
+                    console.log('❌ Validation failed: invalid member');
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                console.log('✅ Validation passed');
+
+                const newLoan = {
+                    id: Math.max(...loans.map(loan => loan.id), 0) + 1,
+                    member: trimmedMember,
+                    amount: parseFloat(newLoanAmount),
+                    status: 'pending approval',
+                    createdAt: new Date().toISOString(),
+                    approvals: 0,
+                    requiredApprovals: globalRequiredApprovals,
+                    payment: newLoanPaymentType
+                };
+
+                try {
+                    console.log('📤 Submitting to API:', newLoan);
+                    await axios.post(`${API_BASE_URL}/new/request`, {
+                        member: trimmedMember,
+                        amount: parseFloat(newLoanAmount),
+                        paymentType: newLoanPaymentType,
+                        requiredApprovals: globalRequiredApprovals
+                    });
+                    console.log('✅ API request successful');
+                    await fetchLoans();
+                } catch (err) {
+                    console.error('❌ API Error:', err);
+                    console.log('💾 Adding loan to local state');
+                    setLoans(prevLoans => [...prevLoans, newLoan]);
+                } finally {
+                    setIsSubmitting(false);
+                }
+
+                setNewLoanMember('');
+                setNewLoanAmount('');
+                setNewLoanPaymentType('');
+                setShowLoanForm(false);
+                setError('');
+                setCurrentPage(1);
+                console.log('🧹 Form reset complete');
+            };
+
+            const handleGlobalApprovalsSubmit = async (e) => {
+                e.preventDefault();
+                const parsedApprovals = parseInt(newGlobalRequiredApprovals, 10);
+                
+                if (!parsedApprovals || parsedApprovals < 1) {
+                    setError('Please enter a valid number of required approvals (minimum 1)');
+                    return;
+                }
+
+                if (parsedApprovals === globalRequiredApprovals) {
+                    setError('Please enter a different number of required approvals');
+                    return;
+                }
+
+                try {
+                    await axios.patch(`${API_BASE_URL}/maxapproval`, {
+                        requiredApprovals: parsedApprovals
+                    });
+                    await fetchLoans();
+                    setGlobalRequiredApprovals(parsedApprovals);
+                } catch (err) {
+                    console.error('Error updating global required approvals:', err);
+                    setLoans(prevLoans =>
+                        prevLoans.map(loan => ({
+                            ...loan,
+                            requiredApprovals: parsedApprovals,
+                            status: loan.approvals >= parsedApprovals && loan.status.toLowerCase().includes('pending') ? 'Approved' : loan.status
+                        }))
+                    );
+                    setGlobalRequiredApprovals(parsedApprovals);
+                }
+
+                setShowGlobalApprovalsForm(false);
+                setNewGlobalRequiredApprovals('');
+                setError('');
+                setCurrentPage(1);
+            };
+
+            const fetchMaxApprovals = async () => {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/max-ct`, {
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 10000
+                    });
+
+                    if (Array.isArray(response.data) && response.data.length > 0 && response.data[0].maxcount !== undefined) {
+                        const maxcount = parseInt(response.data[0].maxcount);
+                        if (!isNaN(maxcount)) {
+                            setGlobalRequiredApprovals(maxcount);
+                            console.log("maxcount is:", response.data[0].maxcount);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error fetching max approvals:", err.message || err);
+                }
+            };
+
+            const fetchLoans = async () => {
+                setDataLoading(true);
+                setError('');
+                
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/requests`, {
+                        headers: { 'Content-Type': 'application/json' },
+                        timeout: 10000
+                    });
+                    
+                    let transformedLoans = [];
+                    if (Array.isArray(response.data)) {
+                        transformedLoans = response.data.map(loan => ({
+                            id: loan.id,
+                            member: loan.member || 'Unknown Member',
+                            amount: loan.amount || 0,
+                            status: loan.approvals >= globalRequiredApprovals && loan.status.toLowerCase().includes('pending') ? 'Approved' : (loan.status || 'pending approval'),
+                            createdAt: loan.createdAt || new Date().toISOString(),
+                            approvals: loan.approvals || 0,
+                            requiredApprovals: loan.requiredApprovals || globalRequiredApprovals,
+                            payment: loan.paymentType || loan.payment || ''
+                        }));
+                    }
+                    
+                    setLoans(transformedLoans);
+                    
+                    if (transformedLoans.length === 0) {
+                        setError('No loans found in database');
+                    }
+                } catch (err) {
+                    console.error('Error fetching loans:', err);
+                    
+                    const mockLoans = [
+                        { id: 1, member: 'John Doe', amount: 5000000, status: 'pending approval', createdAt: '2025-10-05T10:30:00', approvals: 1, requiredApprovals: globalRequiredApprovals, payment: 'BANK_TRANSFER' },
+                        { id: 2, member: 'Jane Smith', amount: 3000000, status: 'Approved', createdAt: '2025-10-04T14:20:00', approvals: 2, requiredApprovals: globalRequiredApprovals, payment: 'MOBILE_MONEY' },
+                        { id: 3, member: 'Bob Johnson', amount: 7500000, status: 'pending approval', createdAt: '2025-10-05T09:15:00', approvals: 0, requiredApprovals: globalRequiredApprovals, payment: 'CASH' }
+                    ];
+                    setLoans(mockLoans);
+                } finally {
+                    setDataLoading(false);
+                }
+            };
+
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                await fetchMaxApprovals();
+
+                try {
+                    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+                        username,
+                        password
+                    });
+                    
+                    if (response.data.token) {
+                        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                        setIsLoggedIn(true);
+                        setCurrentUser(username);
+                        await fetchLoans();
+                    }
+                } catch (err) {
+                    if (username && password) {
+                        setIsLoggedIn(true);
+                        setCurrentUser(username);
+                        await fetchLoans();
+                    } else {
+                        setError('Please enter both username and password');
+                    }
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleLogout = () => {
+                setIsLoggedIn(false);
+                setUsername('');
+                setPassword('');
+                setLoans([]);
+                setCurrentUser('');
+                setPaymentTypes({});
+                setShowLoanForm(false);
+                setNewLoanMember('');
+                setNewLoanAmount('');
+                setNewLoanPaymentType('');
+                setShowGlobalApprovalsForm(false);
+                setNewGlobalRequiredApprovals('');
+                setCurrentPage(1);
+                delete axios.defaults.headers.common['Authorization'];
+            };
+
+            const handleApproveLoan = async (loanId) => {
+                const paymentType = paymentTypes[loanId] || loans.find(loan => loan.id === loanId)?.payment || '';
+                if (!paymentType) {
+                    setError('Please select a payment type before approving the loan');
+                    return;
+                }
+
+                try {
+                    await axios.post(`${API_BASE_URL}/loans/${loanId}/approve`, {
+                        paymentType
+                    });
+                    await fetchLoans();
+                } catch (err) {
+                    console.error('Error approving loan:', err);
+                    setLoans(prevLoans => 
+                        prevLoans.map(loan => {
+                            if (loan.id === loanId) {
+                                const newApprovals = loan.approvals + 1;
+                                const newStatus = newApprovals >= globalRequiredApprovals ? 'Approved' : loan.status;
+                                return { ...loan, approvals: newApprovals, status: newStatus };
+                            }
+                            return loan;
+                        })
+                    );
+                }
+            };
+
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-UG', {
+                    style: 'currency',
+                    currency: 'UGX',
+                    minimumFractionDigits: 0
+                }).format(amount);
+            };
+
+            const formatDate = (dateString) => {
+                const date = new Date(dateString);
+                return date.toLocaleString('en-UG', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            };
+
+            const getStatusClass = (status) => {
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('pending')) return 'status-pending';
+                if (statusLower.includes('approved')) return 'status-approved';
+                if (statusLower.includes('disbursed')) return 'status-disbursed';
+                if (statusLower.includes('rejected')) return 'status-rejected';
+                return 'status-pending';
+            };
+
+            const getFilterCount = (filterType) => {
+                let userLoans = loans;
+                if (currentUser.toLowerCase() !== 'admin') {
+                    userLoans = loans.filter(l => l.member.toLowerCase() === currentUser.toLowerCase());
+                }
+                
+                if (filterType === 'all') return userLoans.length;
+                return userLoans.filter(l => l.status.toLowerCase().includes(filterType.toLowerCase())).length;
+            };
+
+            const totalPages = Math.ceil(filteredLoans.length / loansPerPage);
+            const startIndex = (currentPage - 1) * loansPerPage;
+            const paginatedLoans = filteredLoans.slice(startIndex, startIndex + loansPerPage);
+
+            const handlePageChange = (page) => {
+                if (page >= 1 && page <= totalPages) {
+                    setCurrentPage(page);
+                }
+            };
+
+            if (!isLoggedIn) {
+                return (
+                    <div className="container">
+                        <div className="login-card">
+                            <h1>SACCO Admin Login</h1>
+                            <p className="subtitle">Access your loan management dashboard</p>
+                            
+                            {error && <div className="error">{error}</div>}
+                            
+                            <form onSubmit={handleLogin}>
+                                <div className="form-group">
+                                    <label>Username</label>
+                                    <input
+                                        type="text"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Enter your username"
+                                        disabled={loading}
+                                    />
+                                </div>
+                                
+                                <div className="form-group">
+                                    <label>Password</label>
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Enter your password"
+                                        disabled={loading}
+                                    />
+                                </div>
+                                
+                                <button type="submit" className="btn" disabled={loading}>
+                                    {loading ? 'Logging in...' : 'Login'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+ 
+            return (
+                <div className="container">
+                    <div className="dashboard-card">
+                        <div className="header">
+                            <div>
+                                <h1>{currentUser.toLowerCase() === 'admin' ? 'Loan Management Dashboard' : 'My Loans'}</h1>
+                                <p className="welcome">Welcome, <span>{currentUser}</span> 
+                                    {currentUser.toLowerCase() === 'admin' && <span style={{fontSize: '12px', color: '#999'}}> (Administrator)</span>}
+                                </p>
+                            </div>
+                            <div>
+                                {currentUser.toLowerCase() === 'admin' && (
+                                    <>
+                                        <button onClick={() => {
+                                            console.log('Opening loan form modal');
+                                            setShowLoanForm(true);
+                                        }} className="new-loan-btn">
+                                            New Loan Request
+                                        </button>
+                                        <button onClick={() => {
+                                            setShowGlobalApprovalsForm(true);
+                                            setNewGlobalRequiredApprovals(globalRequiredApprovals.toString());
+                                        }} className="set-approvals-btn">
+                                            Set Required Approvals
+                                        </button>
+                                    </>
+                                )}
+                                <button onClick={handleLogout} className="logout-btn">
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+
+                        {showLoanForm && (
+                            <div className="modal">
+                                {console.log('Loan form modal rendered')}
+                                <div className="modal-content">
+                                    <h2>New Loan Request</h2>
+                                    {error && <div className="error">{error}</div>}
+                                    
+                                        <div className="form-group">
+                                            <label>Member</label>
+                                            <input
+                                                type="text"
+                                                list="member-options"
+                                                value={newLoanMember}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    console.log('Member:', value);
+                                                    setNewLoanMember(value);
+                                                }}
+                                                placeholder="Select a member"
+                                            />
+                                            <datalist id="member-options">
+                                                {uniqueMembers.map(member => (
+                                                    <option key={member} value={member}>{member}</option>
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Loan Amount (UGX)</label>
+                                            <input
+                                                type="number"
+                                                value={newLoanAmount}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    console.log('Amount:', value);
+                                                    setNewLoanAmount(value);
+                                                }}
+                                                placeholder="Enter loan amount"
+                                                min="0"
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Payment Type</label>
+                                            <input
+                                                type="text"
+                                                list="payment-options-new"
+                                                value={newLoanPaymentType}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.trim();
+                                                    console.log('Payment Type:', value);
+                                                    setNewLoanPaymentType(value);
+                                                }}
+                                                placeholder="Select payment type"
+                                            />
+                                            <datalist id="payment-options-new">
+                                                {paymentOptions.map(option => (
+                                                    <option key={option} value={option}>{option}</option>
+                                                ))}
+                                            </datalist>
+                                        </div>
+                                        <div className="modal-buttons">
+                                            <button 
+                                                type="button" 
+                                                className="cancel-btn" 
+                                                onClick={() => {
+                                                    setShowLoanForm(false);
+                                                    setNewLoanMember('');
+                                                    setNewLoanAmount('');
+                                                    setNewLoanPaymentType('');
+                                                    setError('');
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button 
+                                               onClick={loanRequest}
+                                                type="submit"
+                                                className="btn now-send-req"
+                                                disabled={!newLoanMember || !newLoanAmount || !newLoanPaymentType || isSubmitting}
+                                            >
+                                                {isSubmitting ? 'Submitting...' : 'Submit'}
+                                            </button>
+                                        </div>
+                                   
+                                </div>
+                            </div>
+                        )}
+
+                        {showGlobalApprovalsForm && (
+                            <div className="modal">
+                                <div className="modal-content">
+                                    <h2>Set Required Approvals</h2>
+                                    {error && <div className="error">{error}</div>}
+                                    <form onSubmit={handleGlobalApprovalsSubmit}>
+                                        <div className="form-group">
+                                            <label>Required Approvals for All Loans</label>
+                                            <input
+                                                type="number"
+                                                value={newGlobalRequiredApprovals}
+                                                onChange={(e) => setNewGlobalRequiredApprovals(e.target.value)}
+                                                placeholder="Enter number of required approvals"
+                                                min="1"
+                                                step="1"
+                                            />
+                                        </div>
+                                        <div className="modal-buttons">
+                                            <button type="button" className="cancel-btn" onClick={() => {
+                                                setShowGlobalApprovalsForm(false);
+                                                setNewGlobalRequiredApprovals('');
+                                                setError('');
+                                            }}>
+                                                Cancel
+                                            </button>
+                                            <button 
+                                                type="submit" 
+                                                className="btn"
+                                                disabled={
+                                                    !newGlobalRequiredApprovals ||
+                                                    parseInt(newGlobalRequiredApprovals, 10) < 1 ||
+                                                    parseInt(newGlobalRequiredApprovals, 10) === globalRequiredApprovals
+                                                }
+                                            >
+                                                Submit
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="filters">
+                            <button 
+                                className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilter('all')}
+                            >
+                                All Loans ({getFilterCount('all')})
+                            </button>
+                            <button 
+                                className={`filter-btn ${filter === 'pending' ? 'active' : ''}`}
+                                onClick={() => setFilter('pending')}
+                            >
+                                Pending ({getFilterCount('pending')})
+                            </button>
+                            <button 
+                                className={`filter-btn ${filter === 'approved' ? 'active' : ''}`}
+                                onClick={() => setFilter('approved')}
+                            >
+                                Approved ({getFilterCount('approved')})
+                            </button>
+                            <button 
+                                className={`filter-btn ${filter === 'disbursed' ? 'active' : ''}`}
+                                onClick={() => setFilter('disbursed')}
+                            >
+                                Disbursed ({getFilterCount('disbursed')})
+                            </button>
+                        </div>
+                      
+                        {dataLoading ? (
+                            <div className="loading">Loading loans...</div>
+                        ) : filteredLoans.length === 0 ? (
+                            <div className="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                <h3>No loans found</h3>
+                                <p>There are no loans matching your filter criteria.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <table className="loans-table">
+                                    <thead>
+                                        <tr>
+                                            {currentUser.toLowerCase() === 'admin' && <th>Member</th>}
+                                            <th>Loan Amount</th>
+                                            <th>Status</th>
+                                            <th>Approvals</th>
+                                            <th>Created At</th>
+                                            <th>Payment Type</th>
+                                            {currentUser.toLowerCase() === 'admin' && <th>Action</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {paginatedLoans.map(loan => (
+                                            <tr key={loan.id}>
+                                                {currentUser.toLowerCase() === 'admin' && <td>{loan.member}</td>}
+                                                <td className="amount">{formatCurrency(loan.amount)}</td>
+                                                <td>
+                                                    <span className={`status-badge ${getStatusClass(loan.status)}`}>
+                                                        {loan.status}
+                                                    </span>
+                                                </td>
+                                                <td>{loan.approvals}/{globalRequiredApprovals}</td>
+                                                <td className="date">{formatDate(loan.createdAt)}</td>   
+                                                <td>
+                                                    <input
+                                                        type="text"
+                                                        list={`payment-options-${loan.id}`}
+                                                        className="payment-datalist"
+                                                        value={paymentTypes[loan.id] || loan.payment || ''}
+                                                        onChange={(e) => handlePaymentChange(loan.id, e.target.value)}
+                                                        disabled={loan.status.toLowerCase() !== 'pending approval'}
+                                                    />
+                                                    <datalist id={`payment-options-${loan.id}`}>
+                                                        {paymentOptions.map(option => (
+                                                            <option key={option} value={option}>{option}</option>
+                                                        ))}
+                                                    </datalist>
+                                                </td>
+                                                {currentUser.toLowerCase() === 'admin' && (
+                                                    <td>
+                                                        {loan.status.toLowerCase().includes('pending') ? (
+                                                            <button 
+                                                                className="approve-btn"
+                                                                onClick={() => handleApproveLoan(loan.id)}
+                                                                disabled={!(paymentTypes[loan.id] || loan.payment)}
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                        ) : (
+                                                            <span style={{ color: '#999', fontSize: '13px' }}>—</span>
+                                                        )}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                <div className="pagination">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Previous
+                                    </button>
+                                    {Array.from({ length: totalPages }, (_, index) => (
+                                        <button
+                                            key={index + 1}
+                                            onClick={() => handlePageChange(index + 1)}
+                                            className={currentPage === index + 1 ? 'active' : ''}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
